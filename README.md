@@ -157,16 +157,3 @@ new Vue({
 
 * [jsonEditor、ace和clipboard](https://note.youdao.com/share/?id=4cb3b53c76cb9f5f733f171529f71501&type=note#/) （by @[jianhunxia](https://github.com/jianhunxia) 提供)
 
-## 支持
-
-* 如果你发现了新的 bug，或者有新的 feature request，请新建一个 issue
-
-## 捐赠 
-
-如果觉得还不错，请作者喝杯咖啡吧 ☺
-
-![](https://user-gold-cdn.xitu.io/2018/10/28/166ba780bb01fef7?w=2304&h=1050&f=jpeg&s=197327)
-
-## 问题交流
-
-QQ群：902048874
