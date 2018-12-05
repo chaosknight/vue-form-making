@@ -4,13 +4,13 @@
 
       <div class="components-list">
         <div class="widget-cate">基础字段</div>
-        <draggable element="ul" :list="basicComponents" 
+        <draggable element="ul" :list="basicComponents"
           :options="{group:{ name:'people', pull:'clone',put:false},sort:false, ghostClass: 'ghost'}"
           @end="handleMoveEnd"
           @start="handleMoveStart"
           :move="handleMove"
         >
-          
+
           <li class="form-edit-widget-label" v-for="(item, index) in basicComponents" :key="index">
             <a>
               <icon class="icon" :name="item.icon"></icon>
@@ -20,13 +20,13 @@
         </draggable>
 
         <div class="widget-cate">高级字段</div>
-        <draggable element="ul" :list="advanceComponents" 
+        <draggable element="ul" :list="advanceComponents"
           :options="{group:{ name:'people', pull:'clone',put:false},sort:false, ghostClass: 'ghost'}"
           @end="handleMoveEnd"
           @start="handleMoveStart"
           :move="handleMove"
         >
-          
+
           <li class="form-edit-widget-label" v-for="(item, index) in advanceComponents" :key="index">
             <a>
               <icon class="icon" :name="item.icon"></icon>
@@ -34,15 +34,15 @@
             </a>
           </li>
         </draggable>
-        
+
         <div class="widget-cate">布局字段</div>
-        <draggable element="ul" :list="layoutComponents" 
+        <draggable element="ul" :list="layoutComponents"
           :options="{group:{ name:'people', pull:'clone',put:false},sort:false, ghostClass: 'ghost'}"
           @end="handleMoveEnd"
           @start="handleMoveStart"
           :move="handleMove"
         >
-          
+
           <li class="form-edit-widget-label data-grid" v-for="(item, index) in layoutComponents" :key="index">
             <a>
               <icon class="icon" :name="item.icon"></icon>
@@ -51,21 +51,23 @@
           </li>
         </draggable>
       </div>
-      
+
     </el-aside>
     <el-container class="center-container" direction="vertical">
       <el-header class="btn-bar" style="height: 45px;">
-        <!-- <el-button type="text" size="medium" @click="handleGoGithub">GitHub</el-button> -->
+        <el-radio-group v-model="isUIView" size="mini" style="margin-right:10px;">
+          <el-radio-button :label="true">UI视图</el-radio-button>
+          <el-radio-button :label="false">JSON视图</el-radio-button>
+        </el-radio-group>
         <el-button type="text" size="medium" icon="el-icon-view" @click="handlePreview">预览</el-button>
-        <el-button type="text" size="medium" icon="el-icon-tickets" @click="handleGenerateJson">生成JSON</el-button>
         <el-button type="text" size="medium" icon="el-icon-document" @click="handleGenerateCode">生成代码</el-button>
       </el-header>
       <el-main :class="{'widget-empty': widgetForm.list.length == 0}">
-        
-        <widget-form ref="widgetForm" :data="widgetForm" :select.sync="widgetFormSelect"></widget-form>
+        <widget-form v-if="isUIView"  ref="widgetForm" :data="widgetForm" :select.sync="widgetFormSelect"></widget-form>
+        <div v-else id="inputjsoneditor" style="height: 500px;width: 100%;">{{jsonTemplate}}</div>
       </el-main>
     </el-container>
-    
+
     <el-aside class="widget-config-container">
       <el-container>
         <el-header height="45px">
@@ -77,7 +79,7 @@
           <form-config v-show="configTab=='form'" :data="widgetForm.config"></form-config>
         </el-main>
       </el-container>
-      
+
     </el-aside>
 
     <cus-dialog
@@ -104,8 +106,8 @@
       width="800px"
       form
     >
-      <div id="jsoneditor" style="height: 400px;width: 100%;">{{jsonTemplate}}</div>
-      
+      <div id="jsoneditor" style="width: 100%;">{{jsonTemplate}}</div>
+
       <template slot="action">
         <el-button id="copybtn" data-clipboard-target=".ace_text-input">双击复制</el-button>
       </template>
@@ -151,6 +153,7 @@ export default {
   },
   data () {
     return {
+      isUIView:true,
       basicComponents,
       layoutComponents,
       advanceComponents,
@@ -179,9 +182,9 @@ export default {
           }, 2000)
         },
         funcGetToken (resolve) {
-          request.get('http://tools-server.xiaoyaoji.cn/api/uptoken').then(res => {
-            resolve(res.uptoken)
-          })
+          // request.get('http://tools-server.xiaoyaoji.cn/api/uptoken').then(res => {
+          //   resolve(res.uptoken)
+          // })
         }
       },
       widgetModels: {},
@@ -240,6 +243,23 @@ export default {
         const editor = ace.edit('codeeditor')
         editor.session.setMode("ace/mode/html")
       })
+    },
+    handleUploadJson: function handleUploadJson() {
+      // console.log(this.uploadEditor.getValue())
+
+    },
+    getJSON: function getJSON() {
+      return this.widgetForm;
+    },
+    getHtml: function getHtml() {
+      return generateCode(JSON.stringify(this.widgetForm));
+    },
+    setJSON: function setJSON(json) {
+      this.widgetForm = json;
+
+      if (json.list.length > 0) {
+        this.widgetFormSelect = json.list[0];
+      }
     }
   },
   watch: {
@@ -247,6 +267,28 @@ export default {
       deep: true,
       handler: function (val) {
         console.log(this.$refs.widgetForm)
+      }
+    },
+    isUIView:{
+      handler:function(val) {
+        console.log(this.widgetFormSelect)
+        console.log(this.getJSON())
+        if(!val) {
+          this.jsonTemplate = this.widgetForm
+          this.$nextTick(() => {
+            const editor = ace.edit('inputjsoneditor')
+            editor.session.setMode("ace/mode/json")
+          })
+        } else {
+          this.widgetFormSelect = null;
+          const editor = ace.edit('inputjsoneditor');
+          try {
+            this.setJSON(JSON.parse(editor.getValue()));
+          } catch (e) {
+            this.$message.error(e.message);
+            this.$refs.uploadJson.end(); // this.uploadVisible = false
+          }
+        }
       }
     }
   }
